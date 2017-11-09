@@ -62,6 +62,7 @@ public class ObjectCreator {
 			}
 			else if(userChoice == 4){
 				System.out.println("Creating object containing an array of object references");
+				objectsToSerialize.add(createSimpleObject(new ArrayOfObjectReferencesType()));
 				
 			}
 			else if(userChoice == 5){
@@ -74,9 +75,9 @@ public class ObjectCreator {
 			
 			for(int i = 0; i < objectsToSerialize.size(); i++){
 				Object currentObject = objectsToSerialize.get(i);
-				if( currentObject instanceof ArrayOfPrimitivesTypes ){
-					System.out.println( ((ArrayOfPrimitivesTypes)currentObject).intList[0]);
-					System.out.println( ((ArrayOfPrimitivesTypes)currentObject).test);
+				if( currentObject instanceof ArrayOfObjectReferencesType ){
+					System.out.println( ((ArrayOfObjectReferencesType)currentObject).objReferences[0]);
+					System.out.println( ((ObjectB)(((ArrayOfObjectReferencesType)currentObject).objReferences[1])).test );
 				}
 				
 			}
@@ -165,26 +166,39 @@ public class ObjectCreator {
 					System.out.println("Field " + i + " is an array that holds Objects of type" + componentType.toString());
 					
 					for(int j = 0; j < arrayLength; j++){
+			
 						
-						System.out.println("Choose an object for index " + j);
-						
-						
+						Object objToRecurseOn;						
 						while(true){
 							
-							try{
+							System.out.println("Choose an object for index " + j);
+							System.out.println("Enter 1 for ObjectA");
+							System.out.println("Enter 2 for ObjectB");
+								
 							line = userInput.nextLine();
 							
-							userValue = UtilityMethods.toObject(componentType, line);					
 
-							Array.set(fieldObject, j, userValue);
+
+							if(line.equals("1")) {
+								objToRecurseOn = new ObjectA();
 							}
-							catch(NumberFormatException e){
+							else if(line.equals("2")) {
+								objToRecurseOn = new ObjectB();
+							}
+							else {
 								System.out.println("Invalid value entered");
 								continue;
 							}
 							
 							break;
-						}
+						}		
+							
+						Array.set(fieldObject, j, createSimpleObject(objToRecurseOn));
+							
+
+							
+
+						
 							
 					}
 					
