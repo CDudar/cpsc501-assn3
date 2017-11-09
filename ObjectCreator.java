@@ -163,7 +163,7 @@ public class ObjectCreator {
 					
 				}
 				else{
-					System.out.println("Field " + i + " is an array that holds Objects of type" + componentType.toString());
+					System.out.println("Field " + i + " is an array that holds Object references");
 					
 					for(int j = 0; j < arrayLength; j++){
 			
@@ -244,25 +244,70 @@ public class ObjectCreator {
 				
 				else{
 					
-					System.out.println("NOT PRIMITIVE");
+					System.out.println("Field " + i + " is an Object reference");
+					
+					
+					Object objToRecurseOn;
+					
+					while(true) {
+						
+						System.out.println("Choose an object for the field value");
+						System.out.println("Enter 1 for ObjectA");
+						System.out.println("Enter 2 for ObjectB");
+							
+						line = userInput.nextLine();
+						
+
+
+						if(line.equals("1")) {
+							objToRecurseOn = new ObjectA();
+						}
+						else if(line.equals("2")) {
+							objToRecurseOn = new ObjectB();
+						}
+						else {
+							System.out.println("Invalid value entered");
+							continue;
+						}
+						
+						break;
+					}		
+						
+						try {
+							currentField.set(obj, createSimpleObject(objToRecurseOn));
+						} catch (IllegalArgumentException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IllegalAccessException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}
+					
 				}
 				
 			}
-		}
+
 		
 //		try {
-//			System.out.println(objClass.getDeclaredField("stringList").get(obj) );
-//		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-//			e.printStackTrace();
-//		}
+//		System.out.println(objClass.getDeclaredField("stringList").get(obj) );
+//	} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+//		e.printStackTrace();
+//	}
+		
+		return obj;
+	
+	}
 		
 
-		return obj;
-	}
+}
+
+
 	
 		
 		
-	}
+	
 
 	
 	
