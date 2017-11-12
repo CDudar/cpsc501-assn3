@@ -2,13 +2,13 @@
 public class PrimitiveOnlyType {
 
 	public int testInteger;
-	private String testString;
+	//private String testString;
 	
 	
-	PrimitiveOnlyType(int testInteger, String testString){
+	PrimitiveOnlyType(int testInteger){
 		
 		this.testInteger = testInteger;
-		this.testString = testString;
+		//this.testString = testString;
 		
 	}
 	

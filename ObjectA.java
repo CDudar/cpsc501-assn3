@@ -1,6 +1,6 @@
 
 public class ObjectA {
 
-	public ObjectB objB;
+	public Object obj;
 	
 }

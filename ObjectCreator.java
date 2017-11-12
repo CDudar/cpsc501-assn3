@@ -16,7 +16,7 @@ public class ObjectCreator {
 	}
 	
 	
-	public Object[] createUserObjects(){
+	public Vector<Object> createUserObjects(){
 		
 		userInput = new Scanner(System.in);
 		
@@ -49,7 +49,7 @@ public class ObjectCreator {
 			}
 			else if(userChoice == 1){
 				System.out.println("Creating simple object");
-				objectsToSerialize.add(createSimpleObject(new PrimitiveOnlyType(0, "a")));
+				objectsToSerialize.add(createSimpleObject(new PrimitiveOnlyType(0)));
 			}
 			else if(userChoice == 2){
 				System.out.println("Creating object with references to other objects");
@@ -85,7 +85,7 @@ public class ObjectCreator {
 			
 		}
 
-		return new Object[] {new Integer(1)};
+		return objectsToSerialize;
 		
 	}
 	
@@ -102,7 +102,6 @@ public class ObjectCreator {
 		System.out.println(obj.toString() + " has " + fields.length + " fields");
 		
 		for(int i = 0; i < fields.length; i++){
-
 			
 			Field currentField = fields[i];
 	
@@ -118,6 +117,9 @@ public class ObjectCreator {
 			
 			System.out.println("Checking");
 			
+			
+			//================= ARRAY CHECK =====================
+			
 			if(currentField.getType().isArray()){
 				System.out.println("IN");
 				Class<?> componentType = (currentField.getType().getComponentType());
@@ -131,6 +133,8 @@ public class ObjectCreator {
 				arrayLength = 2;
 
 				}
+				
+				//================ PRIMITIVE ARRAY ==============
 				
 				if(componentType.isPrimitive()) {
 					System.out.println("SUPERIN");
@@ -162,6 +166,7 @@ public class ObjectCreator {
 					}
 					
 				}
+				//================== OBJECT REFERENCE ARRAY ==============
 				else{
 					System.out.println("Field " + i + " is an array that holds Object references");
 					
@@ -204,9 +209,17 @@ public class ObjectCreator {
 					
 				}
 			}
+			
+			
+			//============== NON-ARRAY FIELDS ==============
+			
+			
+			
 			else{
+			
+				//================ PRIMITIVE FIELD ============
 				
-				if( currentField.getType().isPrimitive() ){
+				if( currentField.getType().isPrimitive() || currentField.getType().equals(String.class)){
 				
 					while(true){
 		
@@ -241,6 +254,10 @@ public class ObjectCreator {
 						break;
 					}
 				}
+				
+				
+				
+				//============= SINGLE OBJECT FIELD ==============
 				
 				else{
 					
