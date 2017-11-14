@@ -19,36 +19,31 @@ import org.jdom2.output.XMLOutputter;;
 
 public class Serializer {
 	
-		private int IDNumber = 0;
+		private int IDNumber;
 	
-		private IdentityHashMap<Object, Integer> objectsSerialized = new IdentityHashMap<Object, Integer>();
+		private IdentityHashMap<Object, Integer> objectsSerialized;
 		
-		Document doc = new Document();
+		Document doc;
 		
-		Element theRoot = new Element("serialized");
+		Element theRoot;
+		
+		String fileName = "test.xml";
+		
 		
 		public Document serialize(Object obj){
 			
-		Vector<Object> objToSerialize = (Vector<Object>)obj;
-		
-		System.out.println(objToSerialize.size());
-		
-		for(int i = 0; i < objToSerialize.size(); i++){
-			System.out.println(("serializing " + objToSerialize.get(i)));
-			serializeCurrentObject(objToSerialize.get(i), IDNumber++);
+		IDNumber = 0;
+		objectsSerialized = new IdentityHashMap<Object, Integer>();
+		doc = new Document();
+		theRoot = new Element("serialized");
 			
-		}
+		
+		
 
+		System.out.println("serializing obj " + obj.getClass());
+		serializeCurrentObject(obj, IDNumber++);
+			
 		doc.setRootElement(theRoot);
-		
-		XMLOutputter xmlOutput = new XMLOutputter(Format.getPrettyFormat());
-		try {
-			xmlOutput.output(doc, new FileOutputStream(new File("test.xml")));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-
 		
 		return doc;
 	}
@@ -67,19 +62,75 @@ public void serializeCurrentObject(Object obj, int ID){
 	Vector<Pair<Object, Integer>> referencesToSerialize = new Vector<Pair<Object, Integer>>();
 	
 	Element objElement = new Element("object");
-	objElement.setAttribute("class", obj.getClass().toString());
+	objElement.setAttribute("class", obj.getClass().getName());
 	
 	objElement.setAttribute("id", String.valueOf(ID));
 	objectsSerialized.put(obj, ID);
 	
-	Class objClass = obj.getClass();
 	
+	//--IF ARRAY, EXPAND ARRAY OUT
+	
+	if(obj.getClass().isArray()){
+		
+		System.out.println("ARRAY OBJECT");
+		
+		Class<?> componentType = (obj.getClass().getComponentType());
+
+		int arrayLength = Array.getLength(obj);
+		
+		objElement.setAttribute("length", String.valueOf(arrayLength));
+		
+		
+		if(componentType.isPrimitive()){
+			System.out.println("Serializing primitive array");
+			
+			for(int j = 0; j < arrayLength; j++){
+				
+				Element value = new Element("value");
+				
+				value.addContent(new Text(Array.get(obj, j).toString()));
+				
+				objElement.addContent(value);
+			}
+
+		}
+		
+		else{
+			System.out.println("Serializing object reference array");
+			
+			
+			for(int j = 0; j < arrayLength; j++){
+				
+				Element reference = new Element("reference");
+				
+				reference.addContent(new Text(String.valueOf(IDNumber)));
+				
+				referencesToSerialize.add(new Pair(Array.get(obj, j), IDNumber++));
+				
+				objElement.addContent(reference);
+			}
+			
+			
+			
+		}
+		
+	}
+	
+//************
+	
+	
+	
+	
+	Class objClass = obj.getClass();
+		
 	
 	Field[] fields = objClass.getDeclaredFields();
 	
 	System.out.println("accessing fields");
 	
 	for(int i = 0; i < fields.length; i++){
+		
+		System.out.println(fields.length);
 		
 		Field f = fields[i];
 		Object fieldObject = null;
@@ -95,109 +146,59 @@ public void serializeCurrentObject(Object obj, int ID){
 		System.out.println(f.getType());
 		System.out.println(f.getName());
 		
-		if(f.getType().isArray()){
+		
+	
+		System.out.println("Not an array");
+		
+		if(f.getType().isPrimitive()){
 			
-			Class<?> componentType = (f.getType().getComponentType());
+			System.out.println("SERIALIZING PRIMITIVE FIELD");
 			
+			Element primitiveField = new Element("field");
+			primitiveField.setAttribute("name", f.getName());
+			primitiveField.setAttribute("declaringclass", f.getDeclaringClass().getName());
+			
+			
+			Element value = new Element("value");
+			try {
+				value.addContent(new Text(f.get(obj).toString()));
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+			
+			primitiveField.addContent(value);
+			
+			objElement.addContent(primitiveField);
+			
+
+		}
+		
+		else{
+			System.out.println("SERIALIZING OBJECT FIELD");
 			
 			Element objectTag = new Element("field");
-
-			int arrayLength = Array.getLength(fieldObject);
 			
 			objectTag.setAttribute("name", f.getName());
-			objectTag.setAttribute("declaringclass", f.getDeclaringClass().toString());
-			objectTag.setAttribute("length", String.valueOf(arrayLength));
+			objectTag.setAttribute("declaringclass", f.getDeclaringClass().getName());
+			
+			Element reference = new Element("reference");
+			
+			reference.addContent(new Text(String.valueOf(IDNumber)));
+			
+			referencesToSerialize.add(new Pair(fieldObject, IDNumber++));
 			
 			
-			if(componentType.isPrimitive()){
-				System.out.println("Serializing primitive array");
-				
-				for(int j = 0; j < arrayLength; j++){
-					
-					Element value = new Element("value");
-					
-					value.addContent(Array.get(fieldObject, j).toString());
-					
-					objectTag.addContent(value);
-				}
-
-			}
-			
-			else{
-				System.out.println("Serializing object reference array");
-				
-				
-				for(int j = 0; j < arrayLength; j++){
-					
-					Element reference = new Element("reference");
-					
-					reference.addContent(String.valueOf(IDNumber));
-					
-					referencesToSerialize.add(new Pair(Array.get(fieldObject, j), IDNumber++));
-					
-					objectTag.addContent(reference);
-				}
-				
-				
-				
-			}
-			
+			objectTag.addContent(reference);
 			
 			objElement.addContent(objectTag);
 			
-		}
-		else{
-			System.out.println("Not an array");
 			
-			if(f.getType().isPrimitive()){
-				
-				System.out.println("SERIALIZING PRIMITIVE FIELD");
-				
-				Element primitiveField = new Element("field");
-				primitiveField.setAttribute("name", f.getName());
-				primitiveField.setAttribute("declaringclass", f.getDeclaringClass().toString());
-				
-				
-				Element value = new Element("value");
-				try {
-					value.addContent(f.get(obj).toString());
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				}
-				
-				primitiveField.addContent(value);
-				
-				objElement.addContent(primitiveField);
-				
+			
+		}
+			
 
-			}
-			
-			else{
-				System.out.println("SERIALIZING OBJECT FIELD");
-				
-				Element objectTag = new Element("field");
-				
-				objectTag.setAttribute("name", f.getName());
-				objectTag.setAttribute("declaringclass", f.getDeclaringClass().toString());
-				
-				Element reference = new Element("reference");
-				
-				reference.addContent(String.valueOf(IDNumber));
-				
-				referencesToSerialize.add(new Pair(fieldObject, IDNumber++));
-				
-				
-				objectTag.addContent(reference);
-				
-				objElement.addContent(objectTag);
-				
-				
-				
-			}
-			
-		}
 		
 	}
 	
@@ -209,5 +210,8 @@ public void serializeCurrentObject(Object obj, int ID){
 	
 	
 	}
+
+
+	
 
 }
